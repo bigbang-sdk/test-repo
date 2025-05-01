@@ -4,6 +4,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   sync-dev:
     runs-on: ubuntu-latest
@@ -13,6 +16,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # 2) configure git user (so the bot commit has a proper author)
       - name: Setup Git identity
