@@ -1,4 +1,4 @@
-name: Sync dev branch to main
+name: sync-dev
 on:
   push:
     branches:
@@ -9,6 +9,8 @@ permissions:
 
 jobs:
   sync-dev:
+    name: sync-dev
+    if: ${{ github.repository_owner == 'bigbang-sdk' }}
     runs-on: ubuntu-latest
     steps:
       # 1) checkout the repo (full history so branches exist)
