@@ -1,7 +1,7 @@
 name: Release Dev
 
 on:
-  workflow_dispatch: # Manual trigger
+  workflow_dispatch:
 
 permissions:
   contents: write
