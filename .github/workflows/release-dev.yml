@@ -31,8 +31,10 @@ jobs:
           npm install
           npm run build
 
-      - name: Release
+      - name: Release to Dev (dev tag)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx semantic-release --tag dev
+        run: |
+          npx semantic-release \
+            --branches '[{"name":"main","channel":"dev","prerelease":"dev"}]'
