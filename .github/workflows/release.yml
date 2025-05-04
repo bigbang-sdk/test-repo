@@ -82,4 +82,37 @@ jobs:
       - name: Print previous tag
         run: echo "Resolved tag is ${{ steps.compare_versions.outputs.previous_version }}"
 
+      - name: Determine bump type since last tag
+        id: bump_type
+        run: |
+          # 1) Rebuild the tag name (your git tag step strips the "v" prefix)
+          start_tag="v${{ steps.latest_tag.outputs.git_tag }}"
+          echo "Checking commits since $start_tag"
+          
+          # 2) Ensure we have all tags
+          git fetch --tags
+          
+          # 3) Only gather commits if that tag is in our current history
+          if git merge-base --is-ancestor "$start_tag" HEAD; then
+            commits=$(git log "$start_tag"..HEAD --pretty=format:'%s%n%b')
+          else
+            echo "Tag $start_tag not in history—no new commits since tag."
+            commits=""
+          fi
+          
+          # 4) Determine highest bump
+          if echo "$commits" | grep -E '!: ' -q || echo "$commits" | grep -i 'BREAKING CHANGE' -q; then
+            bump_type="major"
+          elif echo "$commits" | grep -E '^feat(\(.+\))?: ' -q; then
+            bump_type="minor"
+          elif echo "$commits" | grep -E '^(fix|perf)(\(.+\))?: ' -q; then
+            bump_type="patch"
+          else
+            bump_type="patch"
+          fi
+          
+          echo "Determined bump type: $bump_type"
+          echo "bump_type=$bump_type" >> $GITHUB_OUTPUT
+
+
 
