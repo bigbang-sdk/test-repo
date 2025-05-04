@@ -21,9 +21,15 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Get latest dev tag
-        id: latest_dev_tag
+      - name: Get latest tag
+        id: latest_tag
         run: |
-          tag=$(git tag -l | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-dev\.[0-9]+$' | sort -V | tail -n1)
-          echo "Latest dev tag: $tag"
+          if [[ "${GITHUB_REF##*/}" == "dev" ]]; then
+            tag=$(git tag -l | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-dev\.[0-9]+$' | sort -V | tail -n1)
+            tag=${tag:-v0.0.0-dev.0}
+          else
+            tag=$(git tag -l | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1)
+            tag=${tag:-v0.0.0}
+          fi
+          echo "Latest tag: $tag"
           echo "tag=$tag" >> $GITHUB_OUTPUT
