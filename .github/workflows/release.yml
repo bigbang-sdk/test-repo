@@ -67,4 +67,17 @@ jobs:
           echo "Latest NPM version: $version"
           echo "npm_version=$version" >> $GITHUB_OUTPUT
 
+      - name: Determine greater of git_tag and npm_version
+        id: previous_tag
+        run: |
+          git_tag="${{ steps.latest_tag.outputs.git_tag }}"
+          npm_version="${{ steps.latest_npm.outputs.npm_version }}"
 
+          # Compare using npx semver
+          if npx semver "$git_tag" ">" "$npm_version"; then
+            echo "Using Git tag: $git_tag"
+            echo "previous_tag=$git_tag" >> $GITHUB_OUTPUT
+          else
+            echo "Using NPM version: $npm_version"
+            echo "previous_tag=$npm_version" >> $GITHUB_OUTPUT
+          fi
