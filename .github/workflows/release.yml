@@ -36,3 +36,29 @@ jobs:
           
       - name: Print tag
         run: echo "Resolved tag is ${{ steps.latest_tag.outputs.git_tag }}"
+
+      - name: Get package name from package.json
+        id: package_name
+        run: |
+          name=$(jq -r .name package.json)
+          echo "Package name: $name"
+          echo "package=$name" >> $GITHUB_OUTPUT
+
+      - name: Get latest npm version
+        id: latest_npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+          pkg="${{ steps.package_name.outputs.package }}"
+      
+          if [[ "${GITHUB_REF##*/}" == "dev" ]]; then
+            version=$(npm view "$pkg@dev" version 2>/dev/null || echo "0.0.0-dev.0")
+          else
+            version=$(npm view "$pkg" version 2>/dev/null || echo "0.0.0")
+          fi
+      
+          echo "Latest NPM version: $version"
+          echo "npm_version=$version" >> $GITHUB_OUTPUT
+
+
