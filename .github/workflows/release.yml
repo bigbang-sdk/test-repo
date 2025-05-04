@@ -144,6 +144,20 @@ jobs:
           # 6) export for downstream steps
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
 
-
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "v${{ steps.bump_version.outputs.new_version }}"
+          name: "v${{ steps.bump_version.outputs.new_version }}"
+          body: |
+            Automated release of version ${{ steps.bump_version.outputs.new_version }}
+            - Generated on branch `${{ github.ref_name }}`
+            - Commit: `${{ github.sha }}`
+          draft: false
+          generate_release_notes: true
+          prerelease: ${{ github.ref_name == 'dev' }}
 
 
