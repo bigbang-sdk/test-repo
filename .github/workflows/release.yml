@@ -127,12 +127,21 @@ jobs:
           # 3) grab the bump_type you determined
           bump="${{ steps.bump_type.outputs.bump_type }}"
           echo "Bump type: $bump"
-          
-          # 4) bump the version
-          new_version=$(npx semver -i "$bump" "$sanitized")
-          echo "New version: $new_version"
-          
-          # 5) export for downstream steps
+
+          # 4) bump the semver
+          base_version=$(npx semver -i "$bump" "$sanitized")
+          echo "Base new version: $base_version"
+
+          # 5) if we're on dev branch, append "-dev.1"
+          branch="${GITHUB_REF##*/}"
+          if [ "$branch" = "dev" ]; then
+            new_version="${base_version}-dev.1"
+          else
+            new_version="$base_version"
+          fi
+          echo "Final new version: $new_version"
+
+          # 6) export for downstream steps
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
 
 
