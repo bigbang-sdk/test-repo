@@ -71,13 +71,14 @@ jobs:
         run: |
           git_tag="${{ steps.latest_tag.outputs.git_tag }}"
           npm_version="${{ steps.latest_npm.outputs.npm_version }}"
+      
+          node <<EOF
+          const semver = require('semver');
+          const git = "$git_tag";
+          const npm = "$npm_version";
+      
+          const greater = semver.gt(git, npm) ? git : npm;
+          console.log("Greater version:", greater);
+          console.log("::set-output name=previous_tag::$greater");
+          EOF
 
-          # Print both
-          echo "Git tag: $git_tag"
-          echo "NPM version: $npm_version"
-
-          # Sort versions using semver and get the highest
-          highest=$(printf "%s\n%s\n" "$git_tag" "$npm_version" | npx --yes semver -r "*" | tail -n1)
-
-          echo "Highest version: $highest"
-          echo "previous_tag=$highest" >> $GITHUB_OUTPUT
