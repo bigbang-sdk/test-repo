@@ -31,8 +31,14 @@ jobs:
             tag=$(git tag -l | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1)
             tag=${tag:-v0.0.0}
           fi
+      
+          # Strip leading "v"
+          version="${tag#v}"
+      
           echo "Latest tag: $tag"
-          echo "git_tag=$tag" >> $GITHUB_OUTPUT
+          echo "Parsed version: $version"
+          echo "git_tag=$version" >> $GITHUB_OUTPUT
+
           
       - name: Print tag
         run: echo "Resolved tag is ${{ steps.latest_tag.outputs.git_tag }}"
