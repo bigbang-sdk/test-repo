@@ -21,13 +21,9 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Get latest Git tag
-        id: latest_git
-        uses: actions-ecosystem/action-get-latest-tag@v1
-        with:
-          semver_only: true
-          with_initial_version: true
-          initial_version: 'v0.0.0'
-          
-      - name: Print latest Git tag
-        run: echo "Latest Git tag is ${{ steps.latest_git.outputs.tag }}"
+      - name: Get latest dev tag
+        id: latest_dev_tag
+        run: |
+          tag=$(git tag -l | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-dev\.[0-9]+$' | sort -V | tail -n1)
+          echo "Latest dev tag: $tag"
+          echo "tag=$tag" >> $GITHUB_OUTPUT
