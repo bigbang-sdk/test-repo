@@ -160,4 +160,23 @@ jobs:
           generate_release_notes: true
           prerelease: ${{ github.ref_name == 'dev' }}
 
+      - name: Install dependencies & build
+        run: |
+          npm install
+          npm run build
 
+      - name: Publish to npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # configure auth
+          npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+          # bump package.json version without tagging
+          npm version "${{ steps.bump_version.outputs.new_version }}" --no-git-tag-version
+          # publish with correct dist-tag
+          branch="${GITHUB_REF##*/}"
+          if [ "$branch" = "dev" ]; then
+            npm publish --tag dev
+          else
+            npm publish
+          fi
