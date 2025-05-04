@@ -21,7 +21,7 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Get latest tag
+      - name: Get latest git tag
         id: latest_tag
         run: |
           if [[ "${GITHUB_REF##*/}" == "dev" ]]; then
@@ -32,4 +32,7 @@ jobs:
             tag=${tag:-v0.0.0}
           fi
           echo "Latest tag: $tag"
-          echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo "git_tag=$tag" >> $GITHUB_OUTPUT
+          
+      - name: Print tag
+        run: echo "Resolved tag is ${{ steps.latest_tag.outputs.git_tag }}"
