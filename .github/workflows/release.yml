@@ -87,19 +87,19 @@ jobs:
         run: |
           # 1) Rebuild the tag name (your git tag step strips the "v" prefix)
           start_tag="v${{ steps.latest_tag.outputs.git_tag }}"
-          echo "Checking commits since $start_tag"
-          
+          echo "Commit range: $start_tag..HEAD"
           # 2) Ensure we have all tags
           git fetch --tags
-          
-          # 3) Only gather commits if that tag is in our current history
-          if git merge-base --is-ancestor "$start_tag" HEAD; then
+          # 3) Grab all subjects + bodies since that tag
+          if git rev-parse "$start_tag" >/dev/null 2>&1; then
+            # tag exists
+            # but may or may not be ancestor
+            # use merge-base test if you care about ancestry...
             commits=$(git log "$start_tag"..HEAD --pretty=format:'%s%n%b')
           else
-            echo "Tag $start_tag not in history—no new commits since tag."
+            echo "No such tag: $start_tag;"
             commits=""
           fi
-          
           # 4) Determine highest bump
           if echo "$commits" | grep -E '!: ' -q || echo "$commits" | grep -i 'BREAKING CHANGE' -q; then
             bump_type="major"
@@ -110,9 +110,31 @@ jobs:
           else
             bump_type="patch"
           fi
-          
           echo "Determined bump type: $bump_type"
           echo "bump_type=$bump_type" >> $GITHUB_OUTPUT
+
+      - name: Bump version & set new_version
+        id: bump_version
+        run: |
+          # 1) grab the previously resolved version
+          previous="${{ steps.compare_versions.outputs.previous_version }}"
+          echo "Original previous version: $previous"
+
+          # 2) sanitize: strip any "-dev.<number>" suffix
+          sanitized="${previous%%-dev.*}"
+          echo "Sanitized previous version: $sanitized"
+
+          # 3) grab the bump_type you determined
+          bump="${{ steps.bump_type.outputs.bump_type }}"
+          echo "Bump type: $bump"
+          
+          # 4) bump the version
+          new_version=$(npx semver -i "$bump" "$sanitized")
+          echo "New version: $new_version"
+          
+          # 5) export for downstream steps
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
 
 
 
