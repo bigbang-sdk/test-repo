@@ -39,14 +39,13 @@ jobs:
       run: |
         # 1. Read into a shell variable
         name=$(jq -r .name package.json)
-    
+
         # 2. Export as an Action output
         echo "name=$name" >> $GITHUB_OUTPUT
-    
+
         # 3. Debug-print to the console
         echo "Package name: $name"
 
-    # 5. Get latest Git tag (dev or main)
     # 5. Get latest Git tag (dev or main)
     - name: Get latest Git tag
       id: git_tag
@@ -79,7 +78,6 @@ jobs:
           || echo "0.0.0${BRANCH==dev && '-dev.0'}")
         echo "npm_v=$latest" >> $GITHUB_OUTPUT
 
-    # 7. Compute the next version
     # 7. Compute the next version
     - name: Determine new version
       id: bump
@@ -123,17 +121,16 @@ jobs:
         # — Export for downstream steps —
         echo "new_version=$new_ver" >> $GITHUB_OUTPUT
 
-
-        # 8. Create GitHub release
-        - name: Create GitHub Release
-          uses: softprops/action-gh-release@v2
-          with:
-            tag_name: "v${{ steps.bump.outputs.new_version }}"
-            name: "v${{ steps.bump.outputs.new_version }}"
-            generate_release_notes: true
-            prerelease: ${{ env.BRANCH == 'dev' }}
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # 8. Create GitHub release
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: "v${{ steps.bump.outputs.new_version }}"
+        name: "v${{ steps.bump.outputs.new_version }}"
+        generate_release_notes: true
+        prerelease: ${{ env.BRANCH == 'dev' }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     # 9. Build & publish
     - name: Build and Publish
