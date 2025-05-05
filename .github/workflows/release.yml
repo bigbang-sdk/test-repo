@@ -38,7 +38,6 @@ jobs:
         id: pkg
         run: |
           echo "name=$(jq -r .name package.json)" >> $GITHUB_OUTPUT
-          echo "current_version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
 
       # 5. Get latest Git tag (dev or main)
       - name: Get latest Git tag
@@ -79,31 +78,29 @@ jobs:
           npm_v=${{ steps.npm_tag.outputs.npm_v }}
           branch=${GITHUB_REF##*/}
 
-          # Pick the higher version (may include '-dev.N')
+          # 1) Pick the greater of git_v vs npm_v (may include '-dev.N')
           chosen=$(printf '%s\n%s\n' "$git_v" "$npm_v" \
             | sort -V | tail -n1)
 
-          # Figure out commit-based bump level (uses git_v for the range)
-          if git log "v$git_v"..HEAD --pretty=%B | grep -qE '!:|BREAKING CHANGE'; then
-            level=major
-          elif git log "v$git_v"..HEAD --pretty=%s | grep -q '^feat'; then
-            level=minor
-          else
-            level=patch
-          fi
-
-          if [[ "$branch" == "dev" ]]; then
-            # Extract current N from '...-dev.N' (defaults to 0)
-            prev_suffix=${chosen##*-dev.}
-            # Compute next N
-            next_suffix=$((prev_suffix + 1))
-            # Strip suffix to get base (everything before '-dev.N')
-            base=${chosen%%-dev.*}
-            new_ver="${base}-dev.${next_suffix}"
-          else
-            # On main, strip any '-dev.N' then bump semver
+          if [[ "$branch" == "main" ]]; then
+            # — On main: figure bump level from commits and bump semver —
+            if git log "v$git_v"..HEAD --pretty=%B | grep -qE '!:|BREAKING CHANGE'; then
+              level=major
+            elif git log "v$git_v"..HEAD --pretty=%s | grep -q '^feat'; then
+              level=minor
+            else
+              level=patch
+            fi
+            # strip any '-dev.N' then bump
             clean_base=${chosen%%-dev.*}
             new_ver=$(npx semver -i "$level" "$clean_base")
+          else
+            # — On dev: just increment the existing '-dev.N' suffix —
+            prev_suffix=${chosen##*-dev.}
+            prev_suffix=${prev_suffix:-0}
+            next_suffix=$((prev_suffix + 1))
+            base=${chosen%%-dev.*}
+            new_ver="${base}-dev.${next_suffix}"
           fi
 
           echo "new_version=$new_ver" >> $GITHUB_OUTPUT
