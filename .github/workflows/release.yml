@@ -51,22 +51,23 @@ jobs:
       id: git_tag
       run: |
         branch=${GITHUB_REF##*/}
-        if [[ "$branch" == "dev" ]]; then
-          # Only look for dev prerelease tags
-          pattern='v[0-9]+.[0-9]+.[0-9]+-dev.[0-9]+'
+
+        if [ "$branch" = "dev" ]; then
+          # match any '-dev.N' prerelease
+          tag=$(git tag -l '*-dev.*' | sort -V | tail -n1)
           default='v0.0.0-dev.0'
         else
-          # Only look for clean semver tags
-          pattern='v[0-9]+.[0-9]+.[0-9]+'
+          # match any semver 'vX.Y.Z'
+          tag=$(git tag -l 'v*.*.*' | sort -V | tail -n1)
           default='v0.0.0'
         fi
 
-        # Find, sort, and pick the latest tag
-        tag=$(git tag -l "$pattern" | sort -V | tail -n1)
+        # fall back if no tags found
         tag=${tag:-$default}
 
-        # Strip leading "v" and export
-        echo "git_v=${tag#v}" >> $GITHUB_OUTPUT
+        # strip leading 'v' and export
+        git_v=${tag#v}
+        echo "git_v=$git_v" >> $GITHUB_OUTPUT
 
     # 6. Get latest npm registry version
     - name: Get latest npm version
