@@ -37,8 +37,14 @@ jobs:
     - name: Read package.json
       id: pkg
       run: |
-        echo "name=$(jq -r .name package.json)" >> $GITHUB_OUTPUT
-        echo "name: $name"
+        # 1. Read into a shell variable
+        name=$(jq -r .name package.json)
+    
+        # 2. Export as an Action output
+        echo "name=$name" >> $GITHUB_OUTPUT
+    
+        # 3. Debug-print to the console
+        echo "Package name: $name"
 
     # 5. Get latest Git tag (dev or main)
     - name: Get latest Git tag
