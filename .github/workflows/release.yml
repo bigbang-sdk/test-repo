@@ -28,10 +28,10 @@ jobs:
 
       # 3. Configure npm auth (only if publishing)
       - name: Configure npm Token
-        if: ${{ secrets.NPM_TOKEN }}
-        run: npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+        if: ${{ secrets.NPM_TOKEN != '' }}
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm config set //registry.npmjs.org/:_authToken=${{ env.NPM_TOKEN }}
 
       # 4. Read package name & current version
       - name: Read package.json
